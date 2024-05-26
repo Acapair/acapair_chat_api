@@ -47,11 +47,11 @@ async fn receive_message(
     match state.is_chat_exists(&room_id).await {
         Some(index) => {
             let mut chats = state.chats.lock().await;
-            chats[index].add_message(message);
+            chats[index].add_message(message, state.max_message_counter);
         }
         None => {
             let mut new_chat = Chat::new(room_id);
-            new_chat.add_message(message);
+            new_chat.add_message(message, state.max_message_counter);
             let mut chats = state.chats.lock().await;
             chats.push(new_chat);
         }

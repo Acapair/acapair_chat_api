@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::VecDeque, time::Duration};
 
 use chrono::Utc;
 use serde::Serialize;
@@ -14,21 +14,24 @@ pub struct Message {
 #[derive(Debug, Serialize)]
 pub struct Chat {
     pub room_id: String,
-    pub messages: Vec<Message>,
+    pub messages: VecDeque<Message>,
 }
 
 impl Chat {
     pub fn new(room_id: String) -> Self {
         Chat {
             room_id,
-            messages: vec![],
+            messages: vec![].into(),
         }
     }
 
-    pub fn add_message(&mut self, mut message: Message) -> bool {
+    pub fn add_message(&mut self, mut message: Message, max_message_count: u16) -> bool {
         message.calculate_hash();
         if !self.is_message_exists(message.clone()) {
-            self.messages.push(message);
+            self.messages.push_back(message);
+            if self.messages.len() > max_message_count as usize {
+                let _ = self.messages.pop_front();
+            } 
             return true;
         }
         false
