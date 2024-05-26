@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, time::Duration};
+use std::collections::VecDeque;
 
 use chrono::Utc;
 use serde::Serialize;
@@ -15,6 +15,7 @@ pub struct Message {
 pub struct Chat {
     pub room_id: String,
     pub messages: VecDeque<Message>,
+    pub last_interaction: u64,
 }
 
 impl Chat {
@@ -22,6 +23,7 @@ impl Chat {
         Chat {
             room_id,
             messages: vec![].into(),
+            last_interaction: Utc::now().timestamp() as u64,
         }
     }
 
@@ -29,9 +31,10 @@ impl Chat {
         message.calculate_hash();
         if !self.is_message_exists(message.clone()) {
             self.messages.push_back(message);
+            self.last_interaction = Utc::now().timestamp() as u64;
             if self.messages.len() > max_message_count as usize {
                 let _ = self.messages.pop_front();
-            } 
+            }
             return true;
         }
         false
@@ -44,15 +47,6 @@ impl Chat {
             }
         }
         false
-    }
-
-    pub async fn message_cleaner(&mut self, max_message_count: u64) {
-        loop {
-            tokio::time::sleep(Duration::from_secs(1)).await;
-            if self.messages.len() > max_message_count as usize {
-                self.messages.clear();
-            }
-        }
     }
 }
 

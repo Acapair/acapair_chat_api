@@ -53,13 +53,20 @@ async fn receive_message(
             let mut new_chat = Chat::new(room_id);
             new_chat.add_message(message, state.max_message_counter);
             let mut chats = state.chats.lock().await;
+            let room_id = new_chat.room_id.clone();
             chats.push(new_chat);
+            drop(chats);
+            tokio::spawn(AppState::chat_destroyer(
+                state.chats.clone(),
+                room_id,
+                state.chat_cleaning_timeout,
+            ));
         }
     }
 }
 
 async fn send_message(
-    Path(room_id): Path<String>, 
+    Path(room_id): Path<String>,
     State(mut state): State<AppState>,
 ) -> impl IntoResponse {
     match state.is_chat_exists(&room_id).await {
