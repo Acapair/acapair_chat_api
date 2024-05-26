@@ -1,11 +1,11 @@
 use axum::{
-    extract::State,
+    extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tower_http::cors::CorsLayer;
 
 use crate::{
@@ -19,16 +19,12 @@ struct ReceivedMessage {
     username: String,
     message: String,
 }
-#[derive(Debug, Serialize, Deserialize)]
-struct SendRequest {
-    room_id: String,
-}
 
 pub async fn routing(State(state): State<AppState>) -> Router {
     Router::new()
         .route("/", get(alive))
         .route("/send", post(receive_message))
-        .route("/receive", get(send_message))
+        .route("/receive/:room_id", get(send_message))
         .layer(CorsLayer::permissive())
         .with_state(state)
 }
@@ -63,10 +59,10 @@ async fn receive_message(
 }
 
 async fn send_message(
+    Path(room_id): Path<String>, 
     State(mut state): State<AppState>,
-    Json(send_request): Json<SendRequest>,
 ) -> impl IntoResponse {
-    match state.is_chat_exists(&send_request.room_id).await {
+    match state.is_chat_exists(&room_id).await {
         Some(index) => {
             let chats = state.chats.lock().await;
             (
