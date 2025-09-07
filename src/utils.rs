@@ -21,10 +21,13 @@ pub fn read_server_config() -> ServerConfig {
     let max_message_counter: Vec<&str> = configs_uncleaned[2].split(':').collect();
     let max_message_counter = max_message_counter[1].parse().unwrap();
 
+    let chat_cleaning_timeout: Vec<&str> = configs_uncleaned[3].split(':').collect();
+    let chat_cleaning_timeout = chat_cleaning_timeout[1].parse().unwrap();
     ServerConfig {
         ip_address,
         port,
         max_message_counter,
+        chat_cleaning_timeout,
     }
 }
 

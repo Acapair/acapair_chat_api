@@ -18,6 +18,7 @@ async fn main() {
     let state = AppState {
         chats: Arc::new(Mutex::new(vec![])),
         max_message_counter: server_config.max_message_counter,
+        chat_cleaning_timeout: server_config.chat_cleaning_timeout,
     };
     let app = routing(axum::extract::State(state)).await;
     let addr = SocketAddr::new(server_config.ip_address, server_config.port);
