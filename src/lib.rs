@@ -11,13 +11,13 @@ pub mod utils;
 pub struct ServerConfig {
     pub ip_address: IpAddr,
     pub port: u16,
-    pub max_message_counter: u64,
+    pub max_message_counter: u16,
 }
 
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub chats: Arc<Mutex<Vec<Chat>>>,
-    pub max_message_counter: u64,
+    pub max_message_counter: u16,
 }
 
 impl AppState {
