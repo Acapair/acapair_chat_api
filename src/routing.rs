@@ -8,10 +8,7 @@ use axum::{
 use serde::Deserialize;
 use tower_http::cors::CorsLayer;
 
-use crate::{
-    chat::{Chat, Message},
-    AppState,
-};
+use crate::{routing_operations, AppState};
 
 #[derive(Debug, Deserialize)]
 struct ReceivedMessage {
@@ -37,46 +34,18 @@ async fn alive() -> impl IntoResponse {
 }
 
 async fn receive_message(
-    State(mut state): State<AppState>,
+    State(state): State<AppState>,
     Json(received_message): Json<ReceivedMessage>,
 ) {
     let sender = received_message.username;
     let data = received_message.message;
     let room_id = received_message.room_id;
-    let message = Message::new(sender, data);
-    match state.is_chat_exists(&room_id).await {
-        Some(index) => {
-            let mut chats = state.chats.lock().await;
-            chats[index].add_message(message, state.max_message_counter);
-        }
-        None => {
-            let mut new_chat = Chat::new(room_id);
-            new_chat.add_message(message, state.max_message_counter);
-            let mut chats = state.chats.lock().await;
-            let room_id = new_chat.room_id.clone();
-            chats.push(new_chat);
-            drop(chats);
-            tokio::spawn(AppState::chat_destroyer(
-                state.chats.clone(),
-                room_id,
-                state.chat_cleaning_timeout,
-            ));
-        }
-    }
+    routing_operations::receive_message(sender, data, room_id, &state).await;
 }
 
 async fn send_message(
     Path(room_id): Path<String>,
-    State(mut state): State<AppState>,
+    State(state): State<AppState>,
 ) -> impl IntoResponse {
-    match state.is_chat_exists(&room_id).await {
-        Some(index) => {
-            let chats = state.chats.lock().await;
-            (
-                StatusCode::OK,
-                serde_json::to_string(&chats[index]).unwrap(),
-            )
-        }
-        None => (StatusCode::BAD_REQUEST, serde_json::to_string("").unwrap()),
-    }
+    routing_operations::send_message(room_id, state).await
 }

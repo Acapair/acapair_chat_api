@@ -6,6 +6,7 @@ use tokio::sync::Mutex;
 
 pub mod chat;
 pub mod routing;
+pub mod routing_operations;
 pub mod test;
 pub mod utils;
 
@@ -24,7 +25,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn is_chat_exists(&mut self, room_id: &String) -> Option<usize> {
+    pub async fn is_chat_exists(&self, room_id: &String) -> Option<usize> {
         let chats = self.chats.lock().await;
         for i in 0..chats.len() {
             if chats[i].room_id == *room_id {
@@ -52,10 +53,6 @@ impl AppState {
                     }
                 }
             }
-            // if chats[chat_index].last_interaction < current - chat_cleaning_timeout as u64 {
-            //     chats.remove(chat_index);
-            //     return;
-            // }
         }
     }
 }
